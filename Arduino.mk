@@ -648,7 +648,9 @@ LOCAL_OBJ_FILES = $(LOCAL_C_SRCS:.c=.o)   $(LOCAL_CPP_SRCS:.cpp=.o) \
 LOCAL_OBJS      = $(patsubst %,$(OBJDIR)/%,$(LOCAL_OBJ_FILES))
 
 ifeq ($(words $(LOCAL_SRCS)), 0)
-    $(error At least one source file (*.ino, *.pde, *.cpp, *c, *cc, *.S) is needed)
+    ifneq ($(MAKECMDGOALS),show_boards)
+    	$(error At least one source file (*.ino, *.pde, *.cpp, *c, *cc, *.S) is needed)
+    endif
 endif
 
 # CHK_SOURCES is used by flymake
@@ -663,7 +665,7 @@ ifeq ($(strip $(CHK_SOURCES)),)
                 $(call show_config_info,No .pde or .ino files found. If you are compiling .c or .cpp files then you need to explicitly include Arduino header files)
             else
                 #TODO: Support more than one file. https://github.com/sudar/Arduino-Makefile/issues/49
-                $(error Need exactly one .pde or .ino file. This makefile doesn't support multiple .ino/.pde files yet)
+                $(error Need exactly one .pde or .ino file. This makefile does not support multiple .ino/.pde files yet)
             endif
         endif
 
@@ -693,6 +695,7 @@ endif
 ########################################################################
 # Determine ARDUINO_LIBS automatically
 
+ifneq ($(words $(LOCAL_SRCS)), 0)
 ifndef ARDUINO_LIBS
     # automatically determine included libraries
     ARDUINO_LIBS += $(filter $(notdir $(wildcard $(ARDUINO_DIR)/libraries/*)), \
@@ -701,6 +704,7 @@ ifndef ARDUINO_LIBS
         $(shell sed -ne "s/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p" $(LOCAL_SRCS)))
     ARDUINO_LIBS += $(filter $(notdir $(wildcard $(USER_LIB_PATH)/*)), \
         $(shell sed -ne "s/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p" $(LOCAL_SRCS)))
+endif
 endif
 
 ########################################################################
