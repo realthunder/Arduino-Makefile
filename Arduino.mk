@@ -883,7 +883,7 @@ ifeq ($(CURRENT_OS), WINDOWS)
     DEVICE_PATH = /dev/ttyS$(shell awk 'BEGIN{ print $(COM_PORT_ID) - 1 }')
 endif
 
-ifdef MONITOR_PORT
+ifneq ($(MONITOR_PORT),)
     DEVICE_PATH = $(MONITOR_PORT)
 else
     # If no port is specified, try to guess it from wildcards.
