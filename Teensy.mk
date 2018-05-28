@@ -203,8 +203,29 @@ MCU := $(shell echo ${CPUFLAGS} | sed -n -e 's/.*-mcpu=\([a-zA-Z0-9_-]*\).*/\1/p
 # may require additional patches for Windows support
 
 do_upload: override get_monitor_port=""
+
 AVRDUDE=@true
-RESET_CMD = nohup $(ARDUINO_DIR)/hardware/tools/teensy_post_compile -board=$(BOARD_TAG) -tools=$(abspath $(ARDUINO_DIR)/hardware/tools) -path=$(abspath $(OBJDIR)) -file=$(TARGET) > /dev/null ; $(ARDUINO_DIR)/hardware/tools/teensy_reboot
+TOOLS_PATH = $(ARDUINO_DIR)/hardware/tools
+
+ifneq (,$(wildcard $(TOOLS_PATH)/teensy_loader_cli))
+RESET_CMD = $(TOOLS_PATH)/teensy_loader_cli -mmcu=$(MCU) -w -v $<
+else
+ifneq (,$(findstring /cygdrive/,$(PATH)))
+RESET_CMD = $(TOOLS_PATH)/teensy_post_compile \
+				-board=$(BOARD_TAG) \
+				-file=$(TARGET) \
+				-path=$(shell cygpath -m $(abspath $(OBJDIR))) \
+			    -tools=$(shell cygpath -m $(abspath $(TOOLS_PATH))); \
+			$(TOOLS_PATH)/teensy_reboot
+else
+RESET_CMD = nohup $(TOOLS_PATH)/teensy_post_compile \
+				-board=$(BOARD_TAG) \
+				-file=$(TARGET) \
+				-path=$(abspath $(OBJDIR)) \
+				-tools=$(abspath $(TOOLS_PATH)); \
+			$(TOOLS_PATH)/teensy_reboot
+endif
+endif
 
 ########################################################################
 # automatially include Arduino.mk for the user
